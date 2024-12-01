@@ -1,4 +1,4 @@
-use std::fs::read_to_string;
+use std::{collections::BTreeMap, fs::read_to_string};
 
 use crate::Solution;
 
@@ -43,9 +43,25 @@ impl Solution for Day01Solver {
         self.column_a.sort();
         self.column_b.sort();
 
+        // Part 1
         let pairs = self.column_a.iter().zip(self.column_b.iter());
-        let result = pairs.map(|(a, b)| a.abs_diff(*b) as u64).sum();
-        vec![result]
+        let part1 = pairs.map(|(a, b)| a.abs_diff(*b) as u64).sum();
+
+        // Part 2
+        let mut column_b_values_with_occurences: BTreeMap<i32, i32> = BTreeMap::new();
+        for value in self.column_b {
+            *column_b_values_with_occurences.entry(value).or_insert(0) += 1;
+        }
+        let values_with_occurences = self.column_a.iter().map(|value_a| {
+            let occurence = column_b_values_with_occurences
+                .get(value_a)
+                .unwrap_or(&0i32);
+            (value_a, occurence)
+        });
+        let part2: u64 = values_with_occurences
+            .map(|(value, occurence)| (value * occurence) as u64)
+            .sum();
+        vec![part1, part2]
     }
 
     fn print_solutions(self) {
@@ -61,7 +77,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_example() {
+    fn test_example_part1() {
         let solver = Day01Solver::default();
         let example_input =
             read_to_string("./src/inputs/day01_example.txt").expect("Failed to open file");
@@ -71,5 +87,18 @@ mod tests {
         let expected_result: u64 = 11;
 
         assert_eq!(example_solution[0], expected_result)
+    }
+
+    #[test]
+    fn test_example_part2() {
+        let solver = Day01Solver::default();
+        let example_input =
+            read_to_string("./src/inputs/day01_example.txt").expect("Failed to open file");
+
+        let example_solution = solver.solve(&example_input);
+
+        let expected_result: u64 = 31;
+
+        assert_eq!(example_solution[1], expected_result)
     }
 }
